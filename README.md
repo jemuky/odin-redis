@@ -1,8 +1,16 @@
 # odin-redis
-redis odin 客户端
+redis odin 客户端  
+参考 [go-redis](https://github.com/redis/go-redis.git) 解析RESP协议
 
 # 依赖于
 - redis服务端
+
+# procedure命名规则
+- 希望对外暴露的与struct有关的使用 `类名(CamelCase)_snake_case`  
+- 不希望对外暴露(非private)的与struct有关的使用 `类名(lower)_snake_case`  
+- 不与struct有关的使用 `snake_case` 
+- struct内method使用 `snake_case` 
+- 本地变量使用 `camelCase`  
 
 # 使用
 
@@ -21,7 +29,7 @@ init :: proc() {
 	logger = log.create_console_logger()
 	err: redis.Error
     // 创建客户端，可以传配置 {ip,port}，默认{"127.0.0.1", 6379}
-	redisCli, err = redis.CmdableNew()
+	redisCli, err = redis.Cmdable_new()
 	if err != nil {
 		panic(fmt.tprintf("redis client create failed, err=%v", err))
 	}
@@ -30,7 +38,7 @@ init :: proc() {
 @(fini, private)
 fini :: proc() {
 	log.destroy_console_logger(logger)
-	redis.CmdableFree(redisCli)
+	redis.Cmdable_free(redisCli)
 }
 
 main :: proc() {
@@ -53,7 +61,10 @@ main :: proc() {
     // 此库已定义的命令都可使用
     redisCli->ping()
     // 未定义命令可这样使用
-	redisCli->anything("auth 123")
+	rspAny, _ := redisCli->anything("auth 123")
+	log.infof("recv before unmarshal rsp={}", rsp)
+	rspNew, _ := Resp_parse(rspAny)
+	log.infof("recv after unmarshal rsp={}", Resp_to_str(&rspNew))
 
     // TxPipeline
     pl := redisCli->tx_pipeline()
@@ -61,6 +72,6 @@ main :: proc() {
 	pl->add_cmd("type skey")
 	pl->add_cmd("get sskey")
 	pl->add_cmd("exists sskey")
-	rspExec, errExec := pl->exec(redisCli)
+	rspExec, _ := pl->exec(redisCli)
 }
 ```

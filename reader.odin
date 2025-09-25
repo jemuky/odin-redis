@@ -4,27 +4,27 @@ import "core:bufio"
 import "core:bytes"
 
 Reader :: struct {
-	br:        bytes.Reader,
-	rd:        bufio.Reader,
+	br:         bytes.Reader,
+	rd:         bufio.Reader,
 	// 方法
-	ParseRecv: proc(_: ^Reader) -> (rspData: Resp, rspErr: Error),
-	ReadLine:  proc(r: ^Reader) -> (brsp: []byte, e: Error),
-	Discard:   proc(r: ^Reader, line: []byte) -> Error,
+	parse_recv: proc(_: ^Reader) -> (rspData: Resp, rspErr: Error),
+	read_line:  proc(r: ^Reader) -> (brsp: []byte, e: Error),
+	discard:    proc(r: ^Reader, line: []byte) -> Error,
 }
 
-ReaderNew :: proc(buf: []byte) -> ^Reader {
+Reader_new :: proc(buf: []byte) -> ^Reader {
 	r := new(Reader)
 
 	bs := bytes.reader_init(&r.br, buf)
 	bufio.reader_init(&r.rd, bs)
 
-	r.ParseRecv = readerParseRecv
-	r.ReadLine = readerReadLine
-	r.Discard = readerDiscard
+	r.parse_recv = reader_parse_recv
+	r.read_line = reader_read_line
+	r.discard = reader_discard
 	return r
 }
 
-ReaderFree :: proc(r: ^Reader) {
+Reade_free :: proc(r: ^Reader) {
 	bufio.reader_destroy(&r.rd)
 	free(r)
 }

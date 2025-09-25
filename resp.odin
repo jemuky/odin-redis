@@ -17,32 +17,32 @@ Resp :: union {
 }
 
 // 按Redis协议解析[]byte
-RespParseBytes :: proc(data: []byte) -> (Resp, Error) {
-	r := ReaderNew(data)
-	defer ReaderFree(r)
-	return r->ParseRecv()
+Resp_parse_bytes :: proc(data: []byte) -> (Resp, Error) {
+	r := Reader_new(data)
+	defer Reade_free(r)
+	return r->parse_recv()
 }
 
 // 按Redis协议解析string
-RespParseStr :: proc(data: string) -> (Resp, Error) {
-	return RespParseBytes(transmute([]byte)data)
+Resp_parse_str :: proc(data: string) -> (Resp, Error) {
+	return Resp_parse_bytes(transmute([]byte)data)
 }
 
 // 按Redis协议解析数据
-RespParse :: proc {
-	RespParseBytes,
-	RespParseStr,
+Resp_parse :: proc {
+	Resp_parse_bytes,
+	Resp_parse_str,
 }
 
 // 将Resp转为格式化好得string字符串
-RespToStr :: proc(r: ^Resp) -> string {
+Resp_to_str :: proc(r: ^Resp) -> string {
 	switch &v in r {
 	case []byte:
 		return string(v)
 	case Maybe(RErr):
 		switch &vv in v {
 		case RErr:
-			return RErrToStr(&vv)
+			return RErr_to_str(&vv)
 		case nil:
 			return ""
 		}
@@ -62,7 +62,7 @@ RespToStr :: proc(r: ^Resp) -> string {
 
 		strings.write_string(&sb, "[")
 		for &vv, i in v {
-			strings.write_string(&sb, RespToStr(&vv))
+			strings.write_string(&sb, Resp_to_str(&vv))
 			if i < len(v) - 1 {
 				strings.write_string(&sb, ", ")
 			}
@@ -80,7 +80,7 @@ RespToStr :: proc(r: ^Resp) -> string {
 		for k, &vv in v {
 			strings.write_string(&sb, k)
 			strings.write_string(&sb, ":")
-			strings.write_string(&sb, RespToStr(&vv))
+			strings.write_string(&sb, Resp_to_str(&vv))
 			strings.write_string(&sb, ", ")
 		}
 		strings.write_string(&sb, "}")
@@ -90,7 +90,7 @@ RespToStr :: proc(r: ^Resp) -> string {
 }
 
 // 释放Resp对象
-RespFree :: proc(r: ^Resp) {
+Resp_free :: proc(r: ^Resp) {
 	if r == nil do return
 
 	#partial switch &v in r {
@@ -101,7 +101,7 @@ RespFree :: proc(r: ^Resp) {
 		delete(v)
 	case []Resp:
 		for &vv in v {
-			RespFree(&vv)
+			Resp_free(&vv)
 		}
 		delete(v)
 	case Maybe(big.Int):

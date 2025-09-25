@@ -12,29 +12,29 @@ Connect :: struct {
 	nonblock:  bool, // 是否使用非阻塞io
 }
 
-ConnectNew :: proc(soc: net.TCP_Socket) -> ^Connect {
+Connect_new :: proc(soc: net.TCP_Socket) -> ^Connect {
 	conn := new(Connect)
 	conn.soc = soc
 	conn.last_used = time.now()
 	return conn
 }
 
-ConnectFree :: proc(conn: ^Connect) {
+Connect_free :: proc(conn: ^Connect) {
 	net.close(conn.soc)
 	free(conn)
 }
 
-ConnectNonblock :: proc(conn: ^Connect) {
+Connect_nonblock :: proc(conn: ^Connect) {
 	net.set_blocking(conn.soc, false)
 	conn.nonblock = true
 }
 
-ConnectBlock :: proc(conn: ^Connect) {
+Connect_block :: proc(conn: ^Connect) {
 	net.set_blocking(conn.soc, true)
 	conn.nonblock = false
 }
 
-ConnectSendData :: proc(conn: ^Connect, sendData: []u8) -> (nSend: int, e: Error) {
+Connect_send_data :: proc(conn: ^Connect, sendData: []u8) -> (nSend: int, e: Error) {
 	// 发送数据
 	// log.debugf("sendData=%s", sendData)
 	buf: bytes.Buffer
@@ -47,14 +47,14 @@ ConnectSendData :: proc(conn: ^Connect, sendData: []u8) -> (nSend: int, e: Error
 
 // 使用buffer接收数据
 // use buffer to receive data
-ConnectBRecvData :: proc(conn: ^Connect, bufRecv: []u8) -> (rspData: []u8, e: Error) {
+Connect_brecv_data :: proc(conn: ^Connect, bufRecv: []u8) -> (rspData: []u8, e: Error) {
 	nRecv := net.recv_tcp(conn.soc, bufRecv) or_return
 	return bufRecv[:nRecv], nil
 }
 
 // 使用临时分配器创建buffer接收数据
 // use temp_allocator to create buffer to receive data
-ConnectTRecvData :: proc(conn: ^Connect, len: int = 1024) -> (rspData: []u8, e: Error) {
+Connect_trecv_data :: proc(conn: ^Connect, len: int = 1024) -> (rspData: []u8, e: Error) {
 	bufRecv := make([]byte, len, allocator = context.temp_allocator)
 	nRecv := net.recv_tcp(conn.soc, bufRecv) or_return
 	return bufRecv[:nRecv], nil
@@ -62,17 +62,24 @@ ConnectTRecvData :: proc(conn: ^Connect, len: int = 1024) -> (rspData: []u8, e: 
 
 // 使用bufRecv接收数据, 并将其中的有效数据返回
 // 需要自己释放传入的bufRecv
-ConnectExecU8Arr :: proc(client: ^Client, sendData: []u8, bufRecv: []u8) -> (rsp: []u8, e: Error) {
+Connect_exec_u8_arr :: proc(
+	client: ^Client,
+	sendData: []u8,
+	bufRecv: []u8,
+) -> (
+	rsp: []u8,
+	e: Error,
+) {
 	// 发送数据
-	nSend := ConnectSendData(client.conn, sendData) or_return
+	nSend := Connect_send_data(client.conn, sendData) or_return
 
 	// 接收数据
-	return ConnectBRecvData(client.conn, bufRecv)
+	return Connect_brecv_data(client.conn, bufRecv)
 }
 
 // 使用bufRecv接收数据, 并将其中的有效数据返回
 // 需要自己释放传入的bufRecv
-ConnectExecU8Str :: proc(
+Connect_exec_str :: proc(
 	client: ^Client,
 	sendData: string,
 	bufRecv: []u8,
@@ -80,31 +87,31 @@ ConnectExecU8Str :: proc(
 	rsp: []u8,
 	e: Error,
 ) {
-	return ConnectExecU8Arr(client, transmute([]u8)sendData, bufRecv)
+	return Connect_exec_u8_arr(client, transmute([]u8)sendData, bufRecv)
 }
 
 // 使用temp_allocator, 并将其中的有效数据返回
-ConnectTExecU8Arr :: proc(conn: ^Connect, sendData: []u8) -> (rsp: []u8, e: Error) {
+Connect_texec_u8_arr :: proc(conn: ^Connect, sendData: []u8) -> (rsp: []u8, e: Error) {
 	// 发送数据
-	nSend := ConnectSendData(conn, sendData) or_return
+	nSend := Connect_send_data(conn, sendData) or_return
 	// 接收数据
-	return ConnectTRecvData(conn)
+	return Connect_trecv_data(conn)
 }
 
 // 使用temp_allocator, 并将其中的有效数据返回
-ConnectTExecU8Str :: proc(conn: ^Connect, sendData: string) -> (rsp: []u8, e: Error) {
-	return ConnectTExecU8Arr(conn, transmute([]u8)sendData)
+Connect_texec_str :: proc(conn: ^Connect, sendData: string) -> (rsp: []u8, e: Error) {
+	return Connect_texec_u8_arr(conn, transmute([]u8)sendData)
 }
 
 // 使用bufRecv接收数据, 并将其中的有效数据返回
 // 需要自己释放传入的bufRecv
-ConnectExec :: proc {
-	ConnectExecU8Arr,
-	ConnectExecU8Str,
+Connect_exec :: proc {
+	Connect_exec_u8_arr,
+	Connect_exec_str,
 }
 
 // 使用temp_allocator, 并将其中的有效数据返回
-ConnectTExec :: proc {
-	ConnectTExecU8Arr,
-	ConnectTExecU8Str,
+Connect_texec :: proc {
+	Connect_texec_u8_arr,
+	Connect_texec_str,
 }

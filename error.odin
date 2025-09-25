@@ -32,41 +32,41 @@ RErr :: struct {
 }
 
 // 将RErr转为字符串格式以供打印
-RErrToStr :: proc(err: ^RErr) -> string {
+RErr_to_str :: proc(err: ^RErr) -> string {
 	return fmt.tprintf("{{code: {}, msg: {:s}}}", err.code, err.msg)
 }
 
 // 从string生成新的RErr
-RErrFromStr :: proc(msg: string) -> Maybe(RErr) {
+RErr_from_str :: proc(msg: string) -> Maybe(RErr) {
 	return RErr{-1, msg}
 }
 
 // 从Error生成新的RErr
-RErrFromError :: proc(err: Error) -> Maybe(RErr) {
+RErr_from_error :: proc(err: Error) -> Maybe(RErr) {
 	return RErr{-1, fmt.tprintf("{}", err)}
 }
 
 // 比较两个RErr是否相同
-RErrEqOrigin :: proc(a, b: ^RErr) -> bool {
-	return a.code == b.code && a.msg == b.msg
+RErr_eq_other :: proc(self, other: ^RErr) -> bool {
+	return self.code == other.code && self.msg == other.msg
 }
 
 // 比较两个Maybe(RErr)是否相同
-RErrEqMaybe :: proc(a, b: Maybe(RErr)) -> bool {
+RErr_eq_Maybe :: proc(a, b: Maybe(RErr)) -> bool {
 	ae, oka := a.(RErr)
 	be, okb := b.(RErr)
 	return oka && okb && ae.code == be.code && ae.msg == be.msg
 }
 
 // 比较两个RErr是否相同
-RErrEq :: proc {
-	RErrEqOrigin,
-	RErrEqMaybe,
+RErr_eq :: proc {
+	RErr_eq_other,
+	RErr_eq_Maybe,
 }
 
-// 从原RErr新建RErr
-RErrAttach :: proc(err: ^RErr, data: any) -> Maybe(RErr) {
-	return RErr{-1, fmt.tprintf("%s: %q", err.msg, data)}
+// 从原RErr附加额外错误信息新建RErr
+RErr_attach :: proc(err: ^RErr, data: any) -> Maybe(RErr) {
+	return RErr{err.code, fmt.tprintf("%s: %q", err.msg, data)}
 }
 
 RErrNil: Maybe(RErr) = RErr{-1, "redis: nil"}

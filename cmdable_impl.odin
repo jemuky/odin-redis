@@ -4,7 +4,7 @@ import "core:fmt"
 import "core:strings"
 import "core:time"
 
-cmdableCommandList :: proc(
+cmdable_command_list :: proc(
 	cmd: ^Cmdable,
 	module, aclcat, pattern: Maybe(string),
 ) -> (
@@ -19,11 +19,18 @@ cmdableCommandList :: proc(
 	if aclcat != nil do strings.write_string(&builder, fmt.tprintf("ACLCAT %s ", aclcat))
 	if pattern != nil do strings.write_string(&builder, fmt.tprintf("PATTERN %s ", pattern))
 
-	return ConnectTExec(cmd.c.conn, strings.to_string(builder))
+	return Connect_texec(cmd.c.conn, strings.to_string(builder))
 }
 
 // 开始命令后面多参
-cmdableSCmdMArgs :: proc(cmd: ^Cmdable, command: string, args: ..string) -> (rsp: []u8, e: Error) {
+cmdable_scmd_margs :: proc(
+	cmd: ^Cmdable,
+	command: string,
+	args: ..string,
+) -> (
+	rsp: []u8,
+	e: Error,
+) {
 	builder := strings.builder_make() or_return
 	defer strings.builder_destroy(&builder)
 
@@ -33,10 +40,10 @@ cmdableSCmdMArgs :: proc(cmd: ^Cmdable, command: string, args: ..string) -> (rsp
 		strings.write_string(&builder, arg)
 		strings.write_string(&builder, " ")
 	}
-	return ConnectTExec(cmd.c.conn, strings.to_string(builder))
+	return Connect_texec(cmd.c.conn, strings.to_string(builder))
 }
 
-cmdableMemoryUsage :: proc(
+cmdable_memory_usage :: proc(
 	cmd: ^Cmdable,
 	key: string,
 	sample: Maybe(int),
@@ -46,10 +53,10 @@ cmdableMemoryUsage :: proc(
 ) {
 	buf: string =
 		sample == nil ? fmt.tprintf("MEMORY USAGE %s", key) : fmt.tprintf("MEMORY USAGE %s SAMPLES %d", key, sample)
-	return ConnectTExec(cmd.c.conn, buf)
+	return Connect_texec(cmd.c.conn, buf)
 }
 
-cmdableExpire :: proc(
+cmdable_expire :: proc(
 	cmd: ^Cmdable,
 	key: string,
 	expiration: time.Duration,
@@ -58,11 +65,11 @@ cmdableExpire :: proc(
 	rsp: []u8,
 	e: Error,
 ) {
-	command := fmt.tprintf("EXPIRE %s %d %s", key, formatSec(expiration), flag)
-	return ConnectTExec(cmd.c.conn, command)
+	command := fmt.tprintf("EXPIRE %s %d %s", key, format_sec(expiration), flag)
+	return Connect_texec(cmd.c.conn, command)
 }
 
-cmdablePExpire :: proc(
+cmdable_pexpire :: proc(
 	cmd: ^Cmdable,
 	key: string,
 	expiration: time.Duration,
@@ -71,11 +78,11 @@ cmdablePExpire :: proc(
 	rsp: []u8,
 	e: Error,
 ) {
-	command := fmt.tprintf("PEXPIRE %s %d %s", key, formatMs(expiration), flag)
-	return ConnectTExec(cmd.c.conn, command)
+	command := fmt.tprintf("PEXPIRE %s %d %s", key, format_ms(expiration), flag)
+	return Connect_texec(cmd.c.conn, command)
 }
 
-cmdableExpireAt :: proc(
+cmdable_expire_at :: proc(
 	cmd: ^Cmdable,
 	key: string,
 	tm: time.Time,
@@ -85,10 +92,10 @@ cmdableExpireAt :: proc(
 	e: Error,
 ) {
 	command := fmt.tprintf("EXPIREAT %s %d %s", key, time.to_unix_seconds(tm), flag)
-	return ConnectTExec(cmd.c.conn, command)
+	return Connect_texec(cmd.c.conn, command)
 }
 
-cmdablePExpireAt :: proc(
+cmdable_pexpire_at :: proc(
 	cmd: ^Cmdable,
 	key: string,
 	tm: time.Time,
@@ -98,5 +105,5 @@ cmdablePExpireAt :: proc(
 	e: Error,
 ) {
 	command := fmt.tprintf("PEXPIREAT %s %d %s", key, time.to_unix_nanoseconds(tm) / 1e6, flag)
-	return ConnectTExec(cmd.c.conn, command)
+	return Connect_texec(cmd.c.conn, command)
 }

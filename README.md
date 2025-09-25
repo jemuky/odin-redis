@@ -5,7 +5,7 @@ redis odin 客户端
 # 依赖于
 - redis服务端
 
-# procedure命名规则
+# 命名规则
 - 希望对外暴露的与struct有关的使用 `类名(CamelCase)_snake_case`  
 - 不希望对外暴露(非private)的与struct有关的使用 `类名(lower)_snake_case`  
 - 不与struct有关的使用 `snake_case` 

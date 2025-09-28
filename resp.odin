@@ -34,11 +34,11 @@ Resp_parse :: proc {
 	Resp_parse_str,
 }
 
-// 将Resp转为格式化好得string字符串
+// 将Resp转为格式化好的string字符串
 Resp_to_str :: proc(r: ^Resp) -> string {
 	switch &v in r {
 	case []byte:
-		return string(v)
+		return fmt.tprintf("\"{}\"", string(v))
 	case Maybe(RErr):
 		switch &vv in v {
 		case RErr:
@@ -47,9 +47,9 @@ Resp_to_str :: proc(r: ^Resp) -> string {
 			return ""
 		}
 	case string:
-		return v
+		return fmt.tprintf("\"{}\"", v)
 	case bool, int, f64:
-		return fmt.tprint("{}", v)
+		return fmt.tprintf("{}", v)
 	case Maybe(big.Int):
 		vv := v.(big.Int)
 		return big.int_to_string(&vv, allocator = context.temp_allocator) or_else ""

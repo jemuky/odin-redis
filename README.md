@@ -58,21 +58,23 @@ main :: proc() {
 	}
 	// 使用logger
 	context.logger = logger
-    // 此库已定义的命令都可使用
-    redisCli->ping()
-    // 未定义命令可这样使用
+    // 已定义的命令都可直接使用
+	redisCli->ping()
+	// 未定义命令可这样使用
 	rspAny, _ := redisCli->anything("auth 123")
-	log.infof("recv before unmarshal rsp={}", rsp)
-	rspNew, _ := Resp_parse(rspAny)
+	log.infof("recv before unmarshal rsp={:s}", rspAny)
+	rspNew, _ := redis.Resp_parse(rspAny)
 	defer redis.Resp_free(&rspNew)
-	log.infof("recv after unmarshal rsp={}", Resp_to_str(&rspNew))
+	log.infof("recv after unmarshal rsp={}", redis.Resp_to_str(&rspNew))
 
-    // TxPipeline
-    pl := redisCli->tx_pipeline()
+	// TxPipeline
+	pl := redisCli->tx_pipeline()
 	pl->add_cmd("set skey test")
 	pl->add_cmd("type skey")
-	pl->add_cmd("get sskey")
-	pl->add_cmd("exists sskey")
+	pl->add_cmd("get skey")
+	pl->add_cmd("exists skey")
 	rspExec, _ := pl->exec(redisCli)
+	defer redis.Resp_free(&rspExec)
+	log.infof("rspExec={},\n rspExec={}", rspExec, redis.Resp_to_str(&rspExec))
 }
 ```

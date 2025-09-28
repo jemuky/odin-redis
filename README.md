@@ -64,6 +64,7 @@ main :: proc() {
 	rspAny, _ := redisCli->anything("auth 123")
 	log.infof("recv before unmarshal rsp={}", rsp)
 	rspNew, _ := Resp_parse(rspAny)
+	defer redis.Resp_free(&rspNew)
 	log.infof("recv after unmarshal rsp={}", Resp_to_str(&rspNew))
 
     // TxPipeline
